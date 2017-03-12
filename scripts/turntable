@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+import argparse
+import logging
+from turntable import MusicLibrary, Server, Turntable
+import zmq
+
+logging.basicConfig(level='INFO')
+
+
+def server(args):
+    server = Server(
+        turntable=Turntable(),
+        library=MusicLibrary(args.library),
+        url=args.listen
+    )
+    server.run()
+
+
+def ctl(args):
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
+    socket.connect(args.server)
+    socket.send_json({
+        'command': args.command,
+        'args': args.args,
+    })
+    reply = socket.recv_json()
+    print(reply)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Turntable')
+    parser.add_argument('--library', default='')
+    subs = parser.add_subparsers()
+
+    server_parser = subs.add_parser('server')
+    server_parser.add_argument('--listen', default='tcp://0.0.0.0:9000')
+    server_parser.set_defaults(func=server)
+
+    ctl_parser = subs.add_parser('ctl')
+    ctl_parser.add_argument('command')
+    ctl_parser.add_argument('args', nargs='*')
+    ctl_parser.add_argument('--server', default='tcp://localhost:9000')
+    ctl_parser.set_defaults(func=ctl)
+
+    args = parser.parse_args()
+    args.func(args)
