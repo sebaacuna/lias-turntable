@@ -1,17 +1,31 @@
+from .turntable import Turntable
+from .musiclibrary import MusicLibrary
 import asyncio
 import logging
+from mpd import MPDClient
+from urllib.parse import urlparse
 import zmq
 import zmq.asyncio
+
 
 logger = logging.getLogger(__name__)
 
 
 class Server:
-    def __init__(self, turntable, library, url):
-        self.url = url
-        self.turntable = turntable
-        self.library = library
+    def __init__(self, listen_url, mpd_url):
+        self.url = listen_url
+        mpd = self._setup_mpd(mpd_url)
+        self.turntable = Turntable(mpd)
+        self.library = MusicLibrary(mpd)
         self.commands = Commands(self)
+
+    def _setup_mpd(self, mpd_url):
+        urlparts = urlparse(mpd_url)
+        mpd = MPDClient()
+        mpd.connect(urlparts.hostname, urlparts.port)
+        logger.info('Connected to MPD at {}'.format(mpd_url))
+        mpd.update()
+        return mpd
 
     def run(self):
         self.ctx = zmq.asyncio.Context()
@@ -26,6 +40,8 @@ class Server:
             self.loop.run_until_complete(main)
         except KeyboardInterrupt:
             pass
+
+        self.turntable.unload()
         self.loop.stop()
         self.socket.close()
 
@@ -51,22 +67,21 @@ class Commands:
         self.turntable = server.turntable
         self.library = server.library
 
+    def stats(self):
+        return self.mpd.status()
+
     def list_albums(self):
-        return [
-            (album.id, album.name)
-            for album in self.library.list_albums()
-        ]
+        return list(map(str, self.library.list_albums()))
 
     def list_tracks(self, album_id=None):
-        if album_id is None:
-            tracks = self.turntable.album.tracks
-        else:
-            tracks = self.library.get_album(album_id).tracks
-        return '\n'.join(map(str, tracks))
+        album = self.library.get_album(
+            album_id or self.turntable.album.id
+        )
+        return album.list_tracks()
 
     def load_album(self, album_id):
         album = self.library.get_album(album_id)
-        self.turntable.load_album(album)
+        self.turntable.load(album)
         return self.turntable.get_status()
 
     def status(self):
@@ -81,9 +96,9 @@ class Commands:
         return self.turntable.get_status()
 
     def next(self):
-        self.turntable.next_track(+1)
+        self.turntable.next()
         return self.turntable.get_status()
 
     def prev(self):
-        self.turntable.next_track(-1)
+        self.turntable.prev()
         return self.turntable.get_status()

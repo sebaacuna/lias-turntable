@@ -1,17 +1,22 @@
 from .album import Album
-from pathlib import Path
+import logging
+# from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 
 class MusicLibrary:
-    def __init__(self, path):
-        self.path = Path(path)
+    def __init__(self, mpd):
+        self.mpd = mpd
 
     def list_albums(self):
         return [
-            Album(path)
-            for path in self.path.iterdir()
-            if path.is_dir() and not path.name.startswith('.')
+            self.get_album(album['playlist'])
+            for album in self.mpd.listplaylists()
         ]
 
+    def list_tracks(self, album_id):
+        return self.mpd.listplaylist(album_id)
+
     def get_album(self, album_id):
-        return Album(self.path / album_id)
+        return Album(self, album_id)
