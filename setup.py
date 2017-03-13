@@ -11,7 +11,8 @@ setup(
         'scripts/turntable'
     ],
     install_requires=[
-        "pygame",
-        "zmq",
+        'pygame',
+        'zmq',
+        'python-mpd2'
     ]
 )

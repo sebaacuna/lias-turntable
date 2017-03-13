@@ -1,5 +1,3 @@
-from .turntable import Turntable
-from .musiclibrary import MusicLibrary
 import asyncio
 import logging
 from mpd import MPDClient
@@ -14,10 +12,9 @@ logger = logging.getLogger(__name__)
 class Server:
     def __init__(self, listen_url, mpd_url):
         self.url = listen_url
-        mpd = self._setup_mpd(mpd_url)
-        self.turntable = Turntable(mpd)
-        self.library = MusicLibrary(mpd)
-        self.commands = Commands(self)
+        self.mpd = self._setup_mpd(mpd_url)
+        self.mpd.clear()
+        self.controls = Controls(self.mpd)
 
     def _setup_mpd(self, mpd_url):
         urlparts = urlparse(mpd_url)
@@ -41,7 +38,7 @@ class Server:
         except KeyboardInterrupt:
             pass
 
-        self.turntable.unload()
+        self.controls.clear()
         self.loop.stop()
         self.socket.close()
 
@@ -51,7 +48,9 @@ class Server:
             try:
                 msg = yield from self.socket.recv_json()
                 reply = yield from self._handle_command(**msg)
-                yield from self.socket.send_json(reply)
+                yield from self.socket.send_json(
+                    reply or self.controls.status()
+                )
             except Exception as e:
                 logger.error(e, exc_info=True)
                 yield from self.socket.send_json(str(e))
@@ -59,46 +58,50 @@ class Server:
     @asyncio.coroutine
     def _handle_command(self, command, args=[]):
         logger.info('Received: {}'.format(command))
-        return getattr(self.commands, command)(*args)
+        return getattr(self.controls, command)(*args)
 
 
-class Commands:
-    def __init__(self, server):
-        self.turntable = server.turntable
-        self.library = server.library
+class Controls:
+    def __init__(self, mpd):
+        self.mpd = mpd
 
     def stats(self):
         return self.mpd.status()
 
     def list_albums(self):
-        return list(map(str, self.library.list_albums()))
+        return [
+            album['playlist']
+            for album in self.mpd.listplaylists()
+        ]
 
     def list_tracks(self, album_id=None):
-        album = self.library.get_album(
-            album_id or self.turntable.album.id
-        )
-        return album.list_tracks()
+        if album_id is None:
+            album_id = self.turntable.album.id
+        return self.mpd.listplaylist(album_id)
 
     def load_album(self, album_id):
-        album = self.library.get_album(album_id)
-        self.turntable.load(album)
-        return self.turntable.get_status()
-
-    def status(self):
-        return self.turntable.get_status()
+        self.mpd.clear()
+        self.mpd.load(album_id)
 
     def play(self):
-        self.turntable.play()
-        return self.turntable.get_status()
+        self.mpd.play()
 
     def stop(self):
-        self.turntable.stop()
-        return self.turntable.get_status()
+        self.mpd.stop()
 
     def next(self):
-        self.turntable.next()
-        return self.turntable.get_status()
+        self.mpd.next()
 
     def prev(self):
-        self.turntable.prev()
-        return self.turntable.get_status()
+        self.mpd.previous()
+
+    def setvol(self, vol):
+        self.mpd.setvol(int(vol))
+
+    def clear(self):
+        self.mpd.clear()
+
+    def status(self):
+        status = self.mpd.status()
+        status.update(self.mpd.currentsong())
+        return status
