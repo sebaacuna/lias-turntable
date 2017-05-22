@@ -1,1 +1,2 @@
--e https://github.com/ondryaso/pi-rc522.git
+spidev
+
