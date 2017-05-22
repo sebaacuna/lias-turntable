@@ -7,11 +7,14 @@ setup(
     name=project_name,
     version='0.1',
     packages=find_packages(),
-    scripts=[
-        'scripts/turntable'
-    ],
     install_requires=[
+        'click',
+        'python-mpd2',
+        'RPi.GPIO',
         'zmq',
-        'python-mpd2'
-    ]
+    ],
+    entry_points='''
+        [console_scripts]
+        turntable=turntable:cli
+    '''
 )
