@@ -1,5 +1,6 @@
 from turntable import cli
 import click
+from json import dumps
 
 
 @cli.command()
@@ -9,7 +10,7 @@ def list_albums(mpd):
         album['playlist']
         for album in mpd.listplaylists()
     ]
-    click.echo(albums)
+    click.echo(dumps(albums))
 
 
 @cli.command()
@@ -19,7 +20,7 @@ def list_tracks(mpd, album=None):
     if album is None:
         album = 'foo'
     tracks = mpd.listplaylist(album)
-    click.echo(tracks)
+    click.echo(dumps(tracks))
 
 
 @cli.command()
@@ -72,4 +73,4 @@ def clear(mpd):
 def status(mpd):
     status = mpd.status()
     status.update(mpd.currentsong())
-    click.echo(status)
+    click.echo(dumps(status))

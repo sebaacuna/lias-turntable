@@ -37,8 +37,8 @@ class Daemon:
         while True:
             if volume_control.changed():
                 self.mpd.setvol(volume_control.value)
-                click.echo('volume: {}'.format(volume_control.value))
-            sleep(0.01)
+                click.echo('{:03d} {}'.format(volume_control.value, '|' * int(volume_control.value / 2)))
+            sleep(0.001)
 
     @asyncio.coroutine
     def _recv_and_process(self):
@@ -74,7 +74,6 @@ class VolumeControl:
         clk = GPIO.input(self.CLK_PIN)
         dt = GPIO.input(self.DT_PIN)
         if clk != self.clk:
-            print((clk, dt))
             change = -1 if dt == clk else 1
             self.value = max(0, min(100, self.value + change))
             self.clk = clk

@@ -3,16 +3,9 @@
   remote_user: pi
 
   tasks:
-  - name: Synchronize repo
-    synchronize:
-      src: ../../lias-turntable
-      dest: /home/pi
-
   - name: Install requirements
     pip:
       virtualenv: /home/pi/venv
-      # virtualenv_python: python3.5
-      virtualenv_command: pyvenv
       requirements: /home/pi/lias-turntable/requirements.txt
 
   - name: Install package
