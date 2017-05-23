@@ -86,11 +86,12 @@ class Volume:
 
 
 class Reader:
-    def __init__(self):
+    def __init__(self, wait):
         self.rfid = RFID()
+        self.wait = wait
 
-    def read(self, wait):
-        if not self.rfid.check_for_tag(wait=0.001):
+    def read(self):
+        if not self.rfid.check_for_tag(wait=self.wait):
             return
 
         self.rfid.irq.clear()
