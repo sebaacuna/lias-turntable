@@ -101,14 +101,3 @@
     args:
       chdir: /root/Python-3.5.2
       creates: /usr/local/bin/python3.5
-
-  - name: Clone SPI-py
-    git:
-      repo: https://github.com/lthiery/SPI-Py
-      dest: /home/pi/SPI-Py
-
-  - name: Install SPI-Py
-    pip:
-      name: /home/pi/SPI-Py
-      virtualenv: /home/pi/venv
-      virtualenv_command: pyvenv

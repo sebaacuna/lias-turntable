@@ -17,5 +17,5 @@
   - name: Install pi-rc522
     pip:
       virtualenv: /home/pi/venv
-      name: git+https://github.com/ondryaso/pi-rc522.git#egg=pi-rc522
+      name: git+https://github.com/sebaacuna/pi-rc522.git#egg=pi-rc522
       editable: yes

@@ -11,7 +11,6 @@ setup(
         'click',
         'python-mpd2',
         'RPi.GPIO',
-        'zmq',
     ],
     entry_points='''
         [console_scripts]
