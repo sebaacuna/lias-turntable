@@ -42,7 +42,7 @@ class Daemon:
                 click.echo('{:03d} {}'.format(volume.value, '|' * int(volume.value / 2)))
             tag = reader.read()
             if tag:
-                # set album
+                click.echo(tag)
                 pass
 
     @asyncio.coroutine
