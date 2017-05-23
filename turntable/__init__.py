@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 @click.group()
 @click.pass_context
-@click.option('--mpd-url', default='http://localhost:6600')
+@click.option('--mpd-url', envvar='MPD_URL', default='http://localhost:6600')
 def cli(ctx, mpd_url):
     urlparts = urlparse(mpd_url)
     mpd = MPDClient()
