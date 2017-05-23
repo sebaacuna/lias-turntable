@@ -65,11 +65,11 @@ class Daemon:
 
 
 class Volume:
-    CLK_PIN = 17
-    DT_PIN = 18
+    CLK_PIN = 11
+    DT_PIN = 12
 
     def __init__(self, value):
-        GPIO.setmode(GPIO.BCM)
+        GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.CLK_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.DT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         self.clk = GPIO.input(self.CLK_PIN)
