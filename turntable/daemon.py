@@ -1,8 +1,8 @@
 import asyncio
 import click
 import logging
+from pirc522 import RFID
 from RPi import GPIO
-from time import sleep
 from turntable import cli
 # import zmq
 # import zmq.asyncio
@@ -33,12 +33,17 @@ class Daemon:
 
     def run(self):
         status = self.mpd.status()
-        volume_control = VolumeControl(int(status['volume']))
+        volume = Volume(int(status['volume']))
+        reader = Reader(wait=0.001)
+
         while True:
-            if volume_control.changed():
-                self.mpd.setvol(volume_control.value)
-                click.echo('{:03d} {}'.format(volume_control.value, '|' * int(volume_control.value / 2)))
-            sleep(0.001)
+            if volume.changed():
+                self.mpd.setvol(volume.value)
+                click.echo('{:03d} {}'.format(volume.value, '|' * int(volume.value / 2)))
+            tag = reader.read()
+            if tag:
+                # set album
+                pass
 
     @asyncio.coroutine
     def _recv_and_process(self):
@@ -59,7 +64,7 @@ class Daemon:
         return getattr(self.controls, command)(*args)
 
 
-class VolumeControl:
+class Volume:
     CLK_PIN = 17
     DT_PIN = 18
 
@@ -78,3 +83,23 @@ class VolumeControl:
             self.value = max(0, min(100, self.value + change))
             self.clk = clk
             return True
+
+
+class Reader:
+    def __init__(self):
+        self.rfid = RFID()
+
+    def read(self, wait):
+        if not self.rfid.check_for_tag(wait=0.001):
+            return
+
+        self.rfid.irq.clear()
+        error, tag_type = self.rfid.request()
+        if error:
+            return
+
+        error, uid = self.rfid.anticoll()
+        if error:
+            return
+
+        return uid
