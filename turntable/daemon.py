@@ -32,9 +32,12 @@ class Daemon:
         self.mpd = mpd
 
     def run(self):
+        self.mpd.clear()
         status = self.mpd.status()
+        album = None
+        albums = self.mpd.listplaylists()
         volume = Volume(int(status['volume']))
-        reader = Reader(wait=0.001)
+        reader = Reader(wait=0.1)
 
         while True:
             if volume.changed():
@@ -42,8 +45,16 @@ class Daemon:
                 click.echo('{:03d} {}'.format(volume.value, '|' * int(volume.value / 2)))
             tag = reader.read()
             if tag:
-                click.echo(tag)
-                pass
+                click.echo('Album tag: {}'.format(tag))
+                for a in albums:
+                    if tag in a['playlist']:
+                        album = a
+                        break
+                if album:
+                    self.mpd.clear()
+                    self.mpd.load(album['playlist'])
+                    self.mpd.play()
+                    click.echo(album)
 
     @asyncio.coroutine
     def _recv_and_process(self):
@@ -89,12 +100,20 @@ class Reader:
     def __init__(self, wait):
         self.rfid = RFID()
         self.wait = wait
+        self.init_rfid()
 
+    def init_rfid(self):
+        self.rfid.init()
+        self.rfid.irq.clear()
+        self.rfid.dev_write(0x04, 0x00)
+        self.rfid.dev_write(0x02, 0xA0)
+    
     def read(self):
         if not self.rfid.check_for_tag(wait=self.wait):
             return
-
         self.rfid.irq.clear()
+        self.rfid.init()
+
         error, tag_type = self.rfid.request()
         if error:
             return
@@ -103,4 +122,4 @@ class Reader:
         if error:
             return
 
-        return uid
+        return bytearray(uid).hex()

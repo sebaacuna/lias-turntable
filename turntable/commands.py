@@ -7,7 +7,7 @@ from json import dumps
 @click.pass_obj
 def list_albums(mpd):
     albums = [
-        album['playlist']
+        album
         for album in mpd.listplaylists()
     ]
     click.echo(dumps(albums))
@@ -74,3 +74,4 @@ def status(mpd):
     status = mpd.status()
     status.update(mpd.currentsong())
     click.echo(dumps(status))
+
