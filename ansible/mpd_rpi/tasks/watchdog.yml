@@ -1,0 +1,50 @@
+---
+# tasks file for mpd_rpi
+# Reference: http://robocraft.ru/blog/3130.html
+
+- name: /etc/modprobe.d/watchdog.conf creation
+  file:
+    path: /etc/modprobe.d/watchdog.conf
+    state: touch
+    owner: root
+    group: root
+    mode:  0644
+  tags: watchdog
+
+# - name: watchdog kernel module configuration
+#   lineinfile:
+#     dest: /etc/modprobe.d/watchdog.conf
+#     state: present
+#     regexp: '^\s*options\s+{{ mpdrpi_watchdog_module }}'
+#     # activate device
+#     line: "options {{ mpdrpi_watchdog_module }} nowayout=1 heartbeat=15"
+#   tags: watchdog
+
+# - name: load watchdog kernel module
+#   modprobe:
+#     name: "{{ mpdrpi_watchdog_module }}"
+#     state: present
+#   tags: watchdog
+
+# - name: watchdog kernel module persisting
+#   lineinfile:
+#     dest: /etc/modules
+#     state: present
+#     regexp: "^{{ mpdrpi_watchdog_module }}"
+#     line: "{{ mpdrpi_watchdog_module }}"
+#   tags: watchdog
+
+- name: watchdog daemon configuration
+  lineinfile:
+    dest: /etc/watchdog.conf
+    state: present
+    regexp: '^watchdog-device\s+=\s+/dev/watchdog'
+    line: "watchdog-device         = /dev/watchdog"
+  tags: watchdog
+
+- name: watchdog service activation
+  service:
+    name: watchdog
+    enabled: yes
+    state: started
+  tags: watchdog

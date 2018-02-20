@@ -1,0 +1,18 @@
+---
+# vars file for mpd_rpi
+
+# mpdrpi_mpd_host_name:     mpd2  # Adjust!
+# mpdrpi_media_share_name:  //nas/media  # Adjust!
+mpdrpi_music_directory:   audio/  # Adjust! It represents the audio files directory relative to the mounted SMB share.
+
+# mpdrpi_media_mount_point: /mnt/media
+mpdrpi_media_mount_point: /media
+
+mpdrpi_mpd_user:          mpd
+# mpdrpi_watchdog_module:   bcm2708_wdog
+
+# Packages which we need to install
+mpdrpi_required_packages:
+  - cifs-utils # actually it's installed by default, but we add it here to be 100% sure that's present
+  - watchdog # watchdog daemon
+#  - mpc # command-line tool to interface MPD - Hm, it seems it's broken on RPI.

@@ -1,0 +1,56 @@
+# Files and directories #######################################################
+music_directory     "{{ mpdrpi_media_mount_point }}/{{ mpdrpi_music_directory }}"
+
+playlist_directory  "/var/lib/mpd/playlists"
+db_file             "/var/lib/mpd/tag_cache"
+log_file            "/var/log/mpd/mpd.log"
+pid_file            "/var/run/mpd/pid"
+state_file          "/var/lib/mpd/state"
+sticker_file        "/var/lib/mpd/sticker.sql"
+
+# General music daemon options ################################################
+user                "{{ mpdrpi_mpd_user }}"
+group               "{{ mpdrpi_mpd_user }}"
+
+bind_to_address     "{{ ansible_default_ipv4.address }}"
+
+log_level           "default"
+# verbose could be useful, for instance, to see whether bit-perfect works
+#log_level          "verbose"
+
+auto_update         "yes"
+
+# Input #######################################################################
+#
+input {
+    plugin "curl"
+}
+
+# Audio Output ################################################################
+audio_output {
+    type            "alsa"
+    name            "HiFiberry DAC+"
+    device          "hw:0,0"        # optional
+    # to suppress warning in logs regarding wrong PCM mixer
+    mixer_type      "none"
+
+    ### for future versions ###
+    # to suppress warning "wrong PCM mixer" in logs
+    # See `amixer scontrols` output for possible control values
+    #mixer_control   "DSP Program"
+    # to permit to play DSD on current old (1.0.25) ALSA
+    #dop             "yes"
+}
+
+audio_output {
+    type            "httpd"
+    name            "MPD HTTP Stream"
+    encoder         "flac"
+    compression     "0"        # [0 (fastest, least compression) .. 8 (slowest, most compression)]
+    port            "8000"
+    max_clients     "3"
+}
+
+# Character Encoding ##########################################################
+filesystem_charset		"UTF-8"
+id3v1_encoding			"UTF-8"

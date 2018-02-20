@@ -1,0 +1,15 @@
+---
+# Installation
+
+#...................................................................................................
+- name: Update APT
+  apt:
+    update_cache: yes
+#...................................................................................................
+- name: required packages installation
+  apt:
+    name={{item}}
+    force=yes
+    state=present
+  with_items: "{{mpdrpi_required_packages}}"
+  tags: pkg

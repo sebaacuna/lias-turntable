@@ -1,0 +1,23 @@
+---
+# tasks file for mpd_rpi
+
+# - name: mount SMB share with media files
+#   mount:
+#     name: "{{ mpdrpi_media_mount_point }}"
+#     src:  "{{ mpdrpi_media_share_name }}"
+#     fstype: cifs
+#     # guest - for suppressing password asking
+#     # _netdev - for automatic mount/umount when LAN is up/down
+#     opts: "ro,guest,_netdev"
+#     state: mounted
+#   tags: samba
+
+# My modest variant of "AutoFS", if nas was down and then becomes up, this job mounts media share.
+# - name: mount all by cron
+#   cron:
+#     name="mount_all"
+#     minute="*/10"
+#     user="root"
+#     job="/bin/mount -a"
+#     cron_file=ansible_mount_all
+#   tags: samba

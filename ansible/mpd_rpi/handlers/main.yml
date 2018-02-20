@@ -1,0 +1,4 @@
+---
+# handlers file for mpd_rpi
+- name: restart_mpd
+  service: name=mpd state=restarted

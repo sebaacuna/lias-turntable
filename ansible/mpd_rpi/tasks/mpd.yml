@@ -1,0 +1,52 @@
+---
+# tasks file for mpd_rpi
+
+# MPD has deb-package with an installation problem:
+# at the end of installation the mpd daemon is started, but configuration isn't valid yet.
+# As a result, error happens and apt-get or dpkg repeorts failure and mark the package as not
+# installed completely.
+#
+# We use a trick. We deploy correct configuration flile and then install the package.
+# Installation doesn't overwrite existing config-file and finishes with success.
+
+#...............................................................................
+- name: MPD group creation
+  group:
+    name="{{ mpdrpi_mpd_user }}"
+    state=present
+  tags: mpd
+#...............................................................................
+#    group="{{ mpdrpi_mpd_user }}"
+- name: MPD user creation
+  user:
+    createhome=no
+    name="{{ mpdrpi_mpd_user }}"
+    state=present
+    group="{{ mpdrpi_mpd_user }}"
+  tags: mpd
+#...............................................................................
+- name: install mpd.conf
+  template:
+    backup=yes
+    src=mpd.conf.j2
+    dest=/etc/mpd.conf
+    owner="{{ mpdrpi_mpd_user }}"
+    group="{{ mpdrpi_mpd_user }}"
+    mode=0640
+  notify: restart_mpd
+  tags: mpd
+#...............................................................................
+- name: MPD package installation
+  apt:
+    name=mpd
+    force=yes
+    state=present
+  tags: mpd
+#...............................................................................
+- name: MPD service activation
+  service:
+    name: mpd
+    enabled: yes
+    state: started
+  notify: restart_mpd
+  tags: mpd

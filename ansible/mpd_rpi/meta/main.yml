@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  author: Igor Solovyov
+  description: The role for installation and tuning MPD on Raspberry Pi 2 + HiFiberry DAC+.
+  issue_tracker_url: https://github.com/igsol/mpd_rpi/issues
+  license: GPLv3
+  min_ansible_version: 1.2
+
+  platforms:
+  - name: Debian
+    versions:
+    - wheezy
+
+  categories:
+  - networking
+  - system
+
+  dependencies:
+  - { role: rpi_mini }

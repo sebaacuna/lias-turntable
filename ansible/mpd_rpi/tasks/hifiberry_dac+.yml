@@ -1,0 +1,48 @@
+---
+# Setup HiFibery DAC+
+
+#------------------------------------------------------
+- name: Remove drivers from the blacklist
+  lineinfile:
+    dest: /etc/modprobe.d/raspi-blacklist.conf
+    state: absent
+    regexp: 'blacklist\s+i2c-bcm2708'
+  tags: hfdacp
+
+- lineinfile:
+    dest: /etc/modprobe.d/raspi-blacklist.conf
+    state: absent
+    regexp: 'blacklist\s+snd-soc-pcm512x'
+  tags: hfdacp
+
+- lineinfile:
+    dest: /etc/modprobe.d/raspi-blacklist.conf
+    state: absent
+    regexp: 'blacklist\s+snd-soc-wm8804'
+  tags: hfdacp
+
+- name: Remove the driver for the onboard sound
+  lineinfile:
+    dest: /etc/modules
+    state: absent
+    regexp: 'snd-bcm2835'
+  tags: hfdacp
+#------------------------------------------------------
+- name: Configure device tree overlay file
+  lineinfile:
+    dest: /boot/config.txt
+    state: present
+    regexp: '^dtoverlay=hifiberry-dacplus'
+    # activate Hifiberry DAC+ Device Tree overlay"
+    line: "dtoverlay=hifiberry-dacplus"
+  tags: hfdacp
+#------------------------------------------------------
+- name: ALSA Configuration
+  template:
+    src: asound.conf.j2
+    dest: /etc/asound.conf
+    owner: root
+    group: root
+    mode:  0644
+  tags: hfdacp
+#------------------------------------------------------

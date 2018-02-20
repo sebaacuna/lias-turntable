@@ -1,0 +1,57 @@
+---
+- hosts: raspberrypi.local
+  remote_user: pi
+  become: yes
+
+  roles:
+  # - rpi_mini
+  - mpd_rpi
+
+  tasks:
+  - name: Add MPD alernate repo
+    apt_repository:
+      repo: deb http://www.lesbonscomptes.com/upmpdcli/downloads/mpd-debian/ stretch main
+      state: present
+
+  - name: Update
+    apt:
+      update_cache: yes
+
+  - name: Install rsync
+    apt:
+      name: rsync
+
+  - name: Install jq
+    apt:
+      name: jq
+
+  - name: Install vim
+    apt:
+      name: vim
+
+  - name: Install MPD
+    apt:
+      name: mpd
+      force: yes
+
+
+- hosts: berry
+  remote_user: pi
+
+  tasks:
+  - name: Install requirements
+    pip:
+      virtualenv: /home/pi/venv
+      requirements: /home/pi/lias-turntable/requirements.txt
+
+  - name: Install package
+    pip:
+      virtualenv: /home/pi/venv
+      name: /home/pi/lias-turntable
+      editable: yes
+
+  - name: Install pi-rc522
+    pip:
+      virtualenv: /home/pi/venv
+      name: git+https://github.com/sebaacuna/pi-rc522.git#egg=pi-rc522
+      editable: yes

@@ -1,0 +1,8 @@
+---
+# tasks file for mpd_rpi
+
+- include: install_packages.yml
+- include: mount_media_src.yml
+- include: watchdog.yml
+- include: hifiberry_dac+.yml
+- include: mpd.yml

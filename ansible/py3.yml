@@ -8,18 +8,6 @@
     apt:
       update_cache: yes
 
-  - name: Install rsync
-    apt:
-      name: rsync
-
-  - name: Install jq
-    apt:
-      name: jq
-
-  - name: Install vim
-    apt:
-      name: vim
-
   - name: build-essential
     apt:
       name: build-essential

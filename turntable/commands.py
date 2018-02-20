@@ -74,4 +74,3 @@ def status(mpd):
     status = mpd.status()
     status.update(mpd.currentsong())
     click.echo(dumps(status))
-
