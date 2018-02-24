@@ -8,20 +8,31 @@ Setup your installer environment (laptop/PC from which the install process will 
 
 1. Install Ansible
 2. Connect to RPI over ethernet
-3. Confirm RPI reachable on standard Bonjour name `raspberrypi.local`
-4. (Optional) Install turntable locally (in a venv) with `pip install -e .` . This allows all `turntable` commands listed below to be run locally. Otherwise it is understood each `turntable` command is run on the RPI by ssh-ing in first.
+3. Confirm RPI reachable on standard Bonjour name `raspberrypi.local` (`ping raspberrypi.local`)
+4. Setup ssh config for a `berry` alias pointing to `raspberrypi.local`
+5. (Optional) Install turntable locally (in a venv) with `pip install -e .` . This allows all `turntable` commands listed below to be run locally. Otherwise it is understood each `turntable` command is run on the RPI by ssh-ing in first.
+
+Suggested SSH config for berry:
+```
+Host berry
+    Hostname raspberrypi.local
+    User pi
+    IdentityFile ~/.ssh/id_rsa
+    CheckHostIp no
+    StrictHostkeyChecking no
+    UserKnownHostsFile=/dev/null
+```
 
 ## RPI prep
 
 0. Add `ssh` file to boot sector on latest Raspbian (Stretch or newer) image
 1. Flash SD Card with image
-2. Set up SSH keys on raspberrypi `ssh pi@raspberrypi.local "mkdir -p .ssh && cat >> .ssh/authorized_keys" <  ~/.ssh/id_rsa.pub`
+2. Set up SSH keys on raspberrypi `ssh berry "mkdir -p .ssh && cat >> .ssh/authorized_keys" <  ~/.ssh/id_rsa.pub`
 
 ## RPI software setup
 
-1. Insert SD card w/ clean RPI image (TODO: formal name/version)
-3. Run `ansible-playbook ansible/py3.yml` (Installs Python3.5 + dev tools and required libs on RPI)
-4. Run `ansible-playbook ansible/turntable.yml` (Installs turntable Python software)
+1. Run `ansible-playbook ansible/py3.yml` (Installs Python3.5 + dev tools and required libs on RPI)
+2. Run `ansible-playbook ansible/turntable.yml` (Installs turntable Python software)
 
 ## RPI hardware setup
 
