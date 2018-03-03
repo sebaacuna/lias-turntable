@@ -13,11 +13,9 @@ try:
 except ImportError:
     RFID = None
 
-# import zmq
-# import zmq.asyncio
-
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 @cli.command('daemon')
@@ -25,16 +23,6 @@ logger = logging.getLogger(__name__)
 def main(mpd):
     daemon = Daemon(mpd)
     daemon.run()
-    # loop = asyncio.get_event_loop()
-    # daemon = Daemon(mpd)
-
-    # try:
-    #     self.loop.run_until_complete(daemon.run())
-    # except KeyboardInterrupt:
-    #     pass
-
-    # loop.stop()
-
 
 class Daemon:
     def __init__(self, mpd):
@@ -107,28 +95,44 @@ class Volume:
 
 class Reader:
     def __init__(self, wait):
+        self.read_count = 0
         self.rfid = RFID()
         self.wait = wait
-        self.init_rfid()
+        self.start_reading()
 
-    def init_rfid(self):
+    def start_reading(self):
         self.rfid.init()
         self.rfid.irq.clear()
         self.rfid.dev_write(0x04, 0x00)
         self.rfid.dev_write(0x02, 0xA0)
 
     def read(self):
-        if not self.rfid.check_for_tag(wait=self.wait):
+        if self.read_count % 100 == 0:
+            click.echo('Reader: read: {}'.format(self.read_count))
+        self.read_count += 1
+
+        self.rfid.dev_write(0x09, 0x26)
+        self.rfid.dev_write(0x01, 0x0C)
+        self.rfid.dev_write(0x0D, 0x87)
+        if not self.rfid.irq.wait(self.wait):
             return
         self.rfid.irq.clear()
         self.rfid.init()
 
+        tag = self.get_tag()
+        self.start_reading()
+        click.echo('Reader: tag {}'.format(tag))
+        return tag
+
+    def get_tag(self):
         error, tag_type = self.rfid.request()
         if error:
+            click.echo('Reader: request error: {} {}'.format(error, tag_type))
             return
 
         error, uid = self.rfid.anticoll()
         if error:
+            click.echo('Reader: anticoll error: {} {}'.format(error, uid))
             return
 
         return bytearray(uid).hex()
