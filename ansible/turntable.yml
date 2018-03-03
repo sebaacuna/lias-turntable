@@ -3,32 +3,38 @@
   remote_user: pi
   become: yes
 
-  roles:
-  - mpd_rpi
+  # roles:
+  # - mpd_rpi
 
 
 - hosts: berry
   remote_user: pi
+  become: yes
 
   tasks:
+  - name: Install git
+    apt:
+      name: git
+
   - name: Checkout source
     git:
-      repo: git@github.com:sebaacuna/lias-turntable
+      repo: https://github.com/sebaacuna/lias-turntable.git
       dest: /home/pi/lias-turntable
+      accept_hostkey: true
 
   - name: Install requirements
     pip:
-      virtualenv: /home/pi/venv
+      executable: pip3
       requirements: /home/pi/lias-turntable/requirements.txt
 
   - name: Install package
     pip:
-      virtualenv: /home/pi/venv
+      executable: pip3
       name: /home/pi/lias-turntable
       editable: yes
 
   - name: Install pi-rc522
     pip:
-      virtualenv: /home/pi/venv
+      executable: pip3
       name: git+https://github.com/sebaacuna/pi-rc522.git#egg=pi-rc522
       editable: yes

@@ -89,3 +89,7 @@
     args:
       chdir: /root/Python-3.5.2
       creates: /usr/local/bin/python3.5
+
+  - name: Install PIP3
+    apt:
+      name: python3-pip
