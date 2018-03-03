@@ -9,13 +9,8 @@
 
 - hosts: berry
   remote_user: pi
-  become: yes
 
   tasks:
-  - name: Install git
-    apt:
-      name: git
-
   - name: Checkout source
     git:
       repo: https://github.com/sebaacuna/lias-turntable.git
@@ -33,8 +28,20 @@
       name: /home/pi/lias-turntable
       editable: yes
 
+  - name: Checkout PIRC source
+    git:
+      repo: https://github.com/sebaacuna/pi-rc522.git
+      dest: /home/pi/pi-rc522
+      accept_hostkey: true
+
   - name: Install pi-rc522
     pip:
       executable: pip3
-      name: git+https://github.com/sebaacuna/pi-rc522.git#egg=pi-rc522
+      name: /home/pi/pi-rc522
       editable: yes
+
+  - name: Enable SPI
+    become: yes
+    blockinfile:
+      path: /boot/config.txt
+      block: dtparam=spi=on
