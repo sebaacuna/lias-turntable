@@ -1,9 +1,18 @@
 import asyncio
 import click
 import logging
-from pirc522 import RFID
-from RPi import GPIO
 from turntable import cli
+
+try:
+    from RPi import GPIO
+except ImportError:
+    GPIO = None
+
+try:
+    from pirc522 import RFID
+except ImportError:
+    RFID = None
+
 # import zmq
 # import zmq.asyncio
 
@@ -107,7 +116,7 @@ class Reader:
         self.rfid.irq.clear()
         self.rfid.dev_write(0x04, 0x00)
         self.rfid.dev_write(0x02, 0xA0)
-    
+
     def read(self):
         if not self.rfid.check_for_tag(wait=self.wait):
             return
