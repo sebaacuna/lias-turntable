@@ -1,6 +1,7 @@
 import asyncio
 import click
 import logging
+from collections import namedtuple
 from turntable import cli
 
 try:
@@ -24,6 +25,7 @@ def main(mpd):
     daemon = Daemon(mpd)
     daemon.run()
 
+
 class Daemon:
     def __init__(self, mpd):
         self.mpd = mpd
@@ -34,12 +36,13 @@ class Daemon:
         album = None
         albums = self.mpd.listplaylists()
         volume = Volume(int(status['volume']))
-        reader = Reader(wait=0.1)
+        reader = Reader(wait=0.001)
 
         while True:
             if volume.changed():
-                self.mpd.setvol(volume.value)
-                click.echo('{:03d} {}'.format(volume.value, '|' * int(volume.value / 2)))
+                click.echo('Volume: {:03d} {}'.format(volume.value, '|' * int(volume.value / 2)))
+                # self.mpd.setvol(volume.value)
+
             tag = reader.read()
             if tag:
                 click.echo('Album tag: {}'.format(tag))
@@ -72,25 +75,37 @@ class Daemon:
         return getattr(self.controls, command)(*args)
 
 
+rotstate = namedtuple('rotstate', 'clk dt')
+
+
 class Volume:
-    CLK_PIN = 11
-    DT_PIN = 12
+    CLK_PIN = 12
+    DT_PIN = 11
 
     def __init__(self, value):
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.CLK_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.DT_PIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-        self.clk = GPIO.input(self.CLK_PIN)
+        self.state = self.get_state()
         self.value = value
 
+    def get_state(self):
+        return rotstate(GPIO.input(self.CLK_PIN), GPIO.input(self.DT_PIN))
+
     def changed(self):
-        clk = GPIO.input(self.CLK_PIN)
-        dt = GPIO.input(self.DT_PIN)
-        if clk != self.clk:
-            change = -1 if dt == clk else 1
+        state = self.get_state()
+        if state == self.state:
+            return False
+
+        if state.clk != self.state.clk and state.dt != self.state.dt:
+            # Overshot the half click
+            pass
+        else:
+            change = 1 if state.clk != self.state.dt else -1
             self.value = max(0, min(100, self.value + change))
-            self.clk = clk
-            return True
+
+        self.state = state
+        return True
 
 
 class Reader:
@@ -107,9 +122,10 @@ class Reader:
         self.rfid.dev_write(0x02, 0xA0)
 
     def read(self):
-        if self.read_count % 100 == 0:
-            click.echo('Reader: read: {}'.format(self.read_count))
-        self.read_count += 1
+        # self.read_count %= 100
+        # if self.read_count == 0:
+        #     click.echo('Reader: read: {}'.format(self.read_count))
+        # self.read_count += 1
 
         self.rfid.dev_write(0x09, 0x26)
         self.rfid.dev_write(0x01, 0x0C)
